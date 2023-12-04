@@ -7,7 +7,7 @@ then >13
 """
 
 # part 1
-"""with open( "day2.txt", "r") as file:
+"""with open( "day02.txt", "r") as file:
     sum = 0
     for line in file:
         gameNum = int(line[4:line.find(':')])
