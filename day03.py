@@ -1,5 +1,5 @@
 
-with open( "day3.txt", "r") as file:
+with open( "day03.txt", "r") as file:
     
     # Making a 2D array representation of input
     ## added buffer rows and columns to prevent ArrayIndexOutOfBounds
