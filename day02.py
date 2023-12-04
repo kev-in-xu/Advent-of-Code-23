@@ -45,7 +45,7 @@ then >13
 
 # part 2
 
-with open( "day2.txt", "r") as file:
+with open( "day02.txt", "r") as file:
     sum = 0
     for line in file:
         # how to iterate and find all numbers?
