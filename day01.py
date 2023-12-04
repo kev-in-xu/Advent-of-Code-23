@@ -44,7 +44,7 @@ o, t, e, s, f, n
 e, o, r, x, n, t
 """
 # part 2
-with open( "day1.txt", "r") as file:
+with open( "day01.txt", "r") as file:
     sum = 0
     for line in file:
         for i in range(len(line)):
