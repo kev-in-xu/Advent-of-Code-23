@@ -1,4 +1,5 @@
-with open( "day4.txt", "r") as file:
+with open( "day0
+4.txt", "r") as file:
     # PART 2
     """
     set up a list of indices and their counts
