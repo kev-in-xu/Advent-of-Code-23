@@ -9,7 +9,7 @@ pt 2
 
 # part 1
 """
-with open( "day1.txt", "r") as file:
+with open( "day01.txt", "r") as file:
     sum = 0
     for line in file:
         for i in range(len(line)):
