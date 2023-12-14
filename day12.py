@@ -1,143 +1,101 @@
-from itertools import permutations
-from itertools import combinations
-from itertools import combinations_with_replacement
-import itertools
-import math
-
 with open( "day12.txt", "r") as file:
     lines = [line.strip() for line in file]
 
 t = []
-for line in lines:
+for line in lines: # parse input
     spring, nums = line.split(" ")
     t.append((spring, nums))
 
+pt2 = True
 
-"""# find where first num can go
-valid = 0
-for pair in t:
-    spring = pair[0]
-    nums = [int(x) for x in pair[1].split(",")]
-    print(spring,nums)
-
-    size = len(spring)
-    dmgcount = spring.count('#')
-    unknowns = spring.count('?')
-    breaks = sum(nums)
-
-    remdmg = breaks - dmgcount
-
-    print(breaks)
-    print(remdmg)
-
-
-    poss = list(combinations(range(unknowns), remdmg))
-    
-    for p in poss:
-        dmgcount = 0
-        #print(p)
-        temp = [s for s in spring]
-        #print(temp)
+# HashTable class from https://intellipaat.com/blog/what-is-hash-table/
+class HashTable:
+    def __init__(self, size):
+        self.size = size
+        self.buckets = [[] for _ in range(self.size)]
         
-        for i in range(len(temp)):
-            if temp[i] == '?':
-                if p.count(dmgcount) == 1:
-                    temp[i] = "#"
-                dmgcount += 1
-                    
-        #print(temp)             
-        #print(temp)
+    def hash_function(self, key):
+        return hash(key) % self.size
+    
+    def set_value(self, key, value):
+        index = self.hash_function(key)
+        found = False
+        for i, kv in enumerate(self.buckets[index]):
+            k, v = kv
+            if key == k:
+                self.buckets[index][i] = (key, value)
+                found = True
+                break
+        if not found:
+            self.buckets[index].append((key, value))
+    
+    def get_value(self, key):
+        index = self.hash_function(key)
+        for k, v in self.buckets[index]:
+            if key == k:
+                return v
+        return None
 
-        newdmg = [ sum( 1 for _ in group ) for key, group in itertools.groupby(temp) if key == '#' ]
-        #print(newdmg)
-        if newdmg == nums:
-            valid += 1
-            print(p)
-            print(*temp)
-
-print(valid)"""
-
-
-def equals(str1, str2):
+# determines whether a set of springs with unknowns can match 
+# a set of known springs that are either working or broken
+def canBe(str1, str2):
     for i in range(len(str1)):
         if str2[i] != '?' and str2[i] != str1[i]:
             return False
     return True
 
+# recursive method with memoization
+def recFind(pair, ht):
+    spring = pair[0]
+    pattern = pair[1]
 
-# can optimize by keeping track of total string length
-
-def tryAll(spr, patts, remlength):
-    if patts == []:
-        return 1
-    
-    if remlength > len(spr):
-        # print(len(spr), remlength)
+    if not pattern:
+        if spring.count("#") == 0: # no more broken springs in either springs nor pattern
+            return 1
+        else:
+            return 0
+    if not spring or len(pattern[0]) > len(spring): # i.e. more broken but no more springs
         return 0
     
-    numstr = patts[0]
+    # check hash table to retrieve value and return
+    count = ht.get_value(spring + ''.join(pattern))
+    if count != None:        
+        return count
+    else:
+        count = 0
 
-    total = 0
-    for i in range(len(spr)-len(numstr)):
-        slice = spr[i:i+len(numstr)]
-        if equals(numstr, slice):
-            total += tryAll(spr[i+len(slice):], patts[1:], remlength-len(numstr))
-    return total
+    # if not, then go through calculation
+    if canBe(pattern[0],spring[0:len(pattern[0])]): # check if pattern is possible
+        count += recFind((spring[len(pattern[0]):], pattern[1:]), ht)
+        if spring[0] != '#': # don't recurse if "#" bc all broken springs need to be accounted for
+            count += recFind((spring[1:], pattern), ht)
+    else:
+        # means spring is broken but still doesn't fit pattern
+        if spring[0] == '#': 
+            ht.set_value(spring + ''.join(pattern),count)
+            return 0
+        else:
+            count += recFind((spring[1:], pattern), ht)
 
-# find where first num can go
+    # after finding result, insert into hash table
+    ht.set_value(spring + ''.join(pattern),count)
+
+    return count
+
 valid = 0
 for pair in t:
-    spring = pair[0]
-    nums = [int(x) for x in pair[1].split(",")]
-    nums = nums * 5
+    if pt2:
+        spring = (pair[0] + "?") * 4 + pair[0] # last element does not have '?' after it
+        nums = [int(x) for x in pair[1].split(",")] * 5
+    else:
+        spring = pair[0]
+        nums = [int(x) for x in pair[1].split(",")]
 
-    spring = (spring + "?") * 4 + spring
-    print(spring,nums)
+    patts = [('#' * num + '.') for num in nums[:-1]]
+    patts.append('#' * nums[-1]) # last element does not require a '.' after it
 
-    size = len(spring)
-    dmgcount = spring.count('#')
-    unknowns = spring.count('?')
-    breaks = sum(nums)
+    htable = HashTable(1017)
+    result = recFind((spring, patts),htable)
+    valid += result
 
-    remdmg = breaks - dmgcount
-
-
-    #poss = list(combinations(range(unknowns), remdmg))
-
-    temp = [s for s in spring]
-
-    """newlist = [ sum( 1 for _ in group ) for key, group in itertools.groupby(temp)]
-    keylist = [ key for key,group in itertools.groupby(temp)]
-    grouplist = list(zip(newlist,keylist))
-    print(*grouplist)"""
-
-    patts = []
-    for num in nums[:-1]:
-        patts.append('#' * num + '.')
-    patts.append('#' * nums[-1])    
-    
-    remlength = sum([len(x) for x in patts])
-
-    valid += tryAll(spring,patts,remlength)
-    
-    print(valid)
-
-    """
-    new idea:
-    translate nums into list of substirngs with ####. ###. #. #. #. etc. DONE
-    write TryAll recursive method:
-        if substring length > len(string):
-            return 0:
-        if last substring and finds valid spot:
-            return 1: 
-
-        DONE
-        
-        sum = 0
-        # try to place string down:
-        go from spring "start" index:
-            if numlist substring matches spring.substring() match (with replacement of ? can match for both . and #):
-                sum +=  tryall(string.substring(len(num substring)), substringlist[1:])
-        return sum
-    """
-print()
+print(valid)
